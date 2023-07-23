@@ -1,0 +1,143 @@
+body{
+    background-image: url("https://images.pexels.com/photos/2736499/pexels-photo-2736499.jpeg?cs=srgb&dl=pexels-content-pixie-2736499.jpg&fm=jpg");
+    background-size: 100%;
+  }
+
+#iconImage{
+    position: absolute;
+    top: 2%;
+    left: 2%;
+    height: 50px;
+    width: 38px;
+  }
+
+#navbar{
+  display: flex;
+  justify-content: center;
+  gap: 2%;
+  background-color: rgb(222, 222, 211);
+}
+
+
+#navbar p{
+  font-weight: 800;
+}
+
+
+#filters{
+  width: 45%;
+  display: flex;
+  gap: 2%;
+}
+
+#search{
+  width: 92%;
+  display: flex;
+  gap: 2%;
+}
+
+.innerDiv{
+  width: 33%;
+  display: flex;
+  flex-direction: column;
+}
+
+.innerDiv .okcancel{
+  width: 50%;
+}
+
+h1{
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-size: 50px;
+}
+.main-box{
+    background-color: #cdc8c4;
+    position: relative;
+    width: 60%;
+    top: 100px;
+    left: 15%;
+}
+input{
+    height: 30px;
+    width: 77%;
+    border-radius: 5px;
+}
+button{
+    width: 18%;
+    height: 30px;
+    font-size: 15px;
+    margin: 1%;
+    border-radius: 5px;
+}
+
+ul{
+  list-style: none;
+}
+
+li
+{
+   display: flex;
+   gap: 3%;
+}
+
+li > .checkbox{
+  /* display: inline; */
+  /* position: relative; */
+  left: 2%;
+  width: 5%;
+}
+
+li button{
+  width: 10%;
+}
+
+li > div{
+    display: inline;
+    width: 50%;
+    font-size: 25px;
+    font-style: italic;
+}
+
+ul input{
+    display: block;
+}
+
+#inputDiv input{
+  display: block;
+  width: 40%;
+}
+
+#inputItem{
+  display: block;
+  width: 80% !important;
+}
+
+.dateItem1{
+  width: auto !important;
+}
+
+/* @media screen and (max-width: 1080px) {
+    .main-box {
+      width: 80%;
+    }
+  }
+
+  @media screen and (max-width: 560px) {
+    .main-box {
+      width: 90%;
+    }
+    button{
+       display: block;
+       width: 30%; 
+    }
+  }
+
+  @media screen and (max-width: 320px) {
+    .main-box {
+      width: 100%;
+    }
+    button{
+       display: block;
+       width: 100%; 
+    }
+  } */

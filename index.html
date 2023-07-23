@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="index.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <title>To-Do-List</title>
+</head>
+<body>
+    <img src="image.webp" alt="icon" id="iconImage">
+    <div id="navbar">
+        <div id="search">
+        <button id="backLog" onclick="viewBacklogs()">
+            View BackLogs
+        </button>
+        <button id="actLog" onclick="viewActLog()">
+            View Activity Log
+        </button>
+        </div>
+    </div>
+    <div id="navbar">
+        <div id="filters">
+            <p>Sorting</p>
+            <button  id="dateSorter" onclick="dateRangeSorter()">
+                Due Date
+            </button>
+            <button id="prioritySorter" onclick="prioritySorter()">
+                Priority
+            </button>
+            <button id="idSorter" onclick="idSorter()">
+                Date Added
+            </button>
+        </div>
+        <div id="filters">
+            <p>Filters :</p> 
+            <button id="dateFilter" onclick="dateRangeFilter()">
+                Due Date
+            </button>
+            <button id="categoryFilter" onclick="categoryFilter()">
+                Category
+            </button>
+            <button id="priorityFilter" onclick="priorityFilter()">
+                Priority
+            </button>
+        </div>
+    </div>
+    <div id="navbar">
+        <div id="search">
+            <p>Search</p>
+        <button id="exactSearch" onclick="exactSearch()">
+            By Exact Item
+        </button>
+        <button id="subSearch" onclick="subSearch()">
+            By Exact subTask
+        </button>
+        <button id="tagSearch" onclick="tagSearch()">
+            By Tags
+        </button>
+        <button id="partialSearch" onclick="partialSearch()">
+            By Partial Keywords
+        </button>
+        <button id="categorySearch" onclick="categorySearch()">
+            By Category
+        </button>
+        </div>
+    </div>
+
+    <div class="main-box">
+        <h1>To-Do-List</h1>
+        <div id="inputDiv">
+            <button id="addTask" onclick="addTaskButton()">
+                Add Task
+            </button>
+        </div>
+        <ul id="finalList"></ul>
+    </div>
+</body>
+</html>
