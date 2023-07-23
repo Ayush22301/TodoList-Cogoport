@@ -1321,7 +1321,8 @@ function checkReminders()
         }
     }
     // console.log(rem);
-    alert(`Reminder !!! Following tasks have due date in 1 hour : ${rem}`)
+    if(rem.length>0)
+    {alert(`Reminder !!! Following tasks have due date in 1 hour : ${rem}`)}
 }
 
 
