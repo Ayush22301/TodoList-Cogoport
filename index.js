@@ -1,9 +1,28 @@
+class LocalStorageHelper {
+    static getData(key) {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : null;
+    }
+  
+    static setData(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+  
+    static clearData(key) {
+      localStorage.removeItem(key);
+    }
+  }
+const todolist = LocalStorageHelper.getData('todolist') || [];
+const categories = LocalStorageHelper.getData('categories') || [];
+const priorities = LocalStorageHelper.getData('priorities') || [];
+// const activity = LocalStorageHelper.getData('activity') || [];
 
-var todolist = [];
+// var todolist = [];
+// localStorage.clear();
 
-var categories = [];
+// var categories = [];
 
-var priorities = [];
+// var priorities = [];
 
 var activity = [];
 
@@ -15,9 +34,9 @@ function getNewId(){
     return c++;
 }
 
-function createTask(details,category,dueDate,isDone,priority,tags)
+function createTask(details,category,dueDate,isDone,priority,tags,isRem=false)
 {
-    return {id:getNewId(),taskDetails:details,category:category,dueDate:dueDate,isDone:isDone,priority:priority,tags:tags,subTasks:[]};
+    return {id:getNewId(),taskDetails:details,category:category,dueDate:dueDate,isDone:isDone,priority:priority,tags:tags,subTasks:[],isRem:isRem};
 }
 
 function renderItem(list,item){
@@ -51,10 +70,12 @@ function renderItem(list,item){
     li.appendChild(viewButton);
     li.appendChild(editButton);
     li.appendChild(deleteButton);
+    makeDraggable(li);
     list.appendChild(li);
 }
 
 function renderList(){
+    console.log(todolist);
     let list = document.getElementById("finalList");
     if(list)list.innerHTML = '';
     for(var i=0;i<todolist.length;i++)
@@ -83,6 +104,7 @@ function renderSubTask(list,item){
     li.appendChild(checkBox);
     li.appendChild(textDiv);
     li.appendChild(dateDiv);
+    makeDraggable(li);
     list.appendChild(li);
 }
 
@@ -118,6 +140,7 @@ fetch('https://jsonplaceholder.typicode.com/todos')
     return response.json();
   })
   .then((data) => {
+    if(todolist.length>0){renderList();return;}
     for (let i = 0; i < 3; i++)
     {
         var crntDay = new Date().toLocaleString();
@@ -125,9 +148,12 @@ fetch('https://jsonplaceholder.typicode.com/todos')
         todolist.push(task);
         insertTaskInCategories(task.category,task.id);
         insertTaskInPriorities(task.priority,task.id);
+        LocalStorageHelper.setData('todolist', todolist);
+        LocalStorageHelper.setData('categories', categories);
+        LocalStorageHelper.setData('priorities', priorities);
     }
     typeOfRender = 0;
-    console.log(todolist);
+    // console.log(todolist);
     renderList();
   })
   .catch(error => {
@@ -168,6 +194,13 @@ function addTaskButton(){
     tagsInput.value = "";
     tagsInput.placeholder = "Enter Tags comma separated without space";
     prntDiv.appendChild(tagsInput);
+    var remBtn = document.createElement("input");
+    remBtn.type = "checkbox";
+    remBtn.value = "false";
+    remBtn.addEventListener("change", handleCheckboxChange);
+    prntDiv.appendChild(remBtn);
+    prntDiv.appendChild(document.createTextNode("Add Reminder"));
+    prntDiv.appendChild(document.createElement("br"));
     var saveButton = document.createElement("button");
     saveButton.setAttribute('onclick','saveItem()');
     saveButton.appendChild(document.createTextNode("Save"));
@@ -178,33 +211,187 @@ function addTaskButton(){
     prntDiv.appendChild(cancelButton);
 }
 
+function handleCheckboxChange()
+{
+    if (event.target.checked)
+    {
+        event.target.value = true;
+    }
+    else
+    {
+        event.target.value = false
+    }
+}
+  
 // function extractDueDateFromText(todoText) {
-//     const tomorrowRegex = /\btomorrow\b/i;
+//     const todayRegex = /\bby today\b/i;
+//     const tomorrowRegex = /\bby tomorrow\b/i;
 //     const dateRegex = /\b(\d{1,2}(st|nd|rd|th)?(?:\s+)?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:\s+)?(?:\d{2,4})?)\b/i;
 //     const timeRegex = /\b(\d{1,2}:\d{2}(?:\s+)?(am|pm))\b/i;
+//     const timeOnlyRegex = /\bby\s+(\d{1,2}(?:\s+)?(am|pm))\b/i;
+  
+//     const matchToday = todoText.match(todayRegex);
 //     const matchTomorrow = todoText.match(tomorrowRegex);
 //     const matchDate = todoText.match(dateRegex);
 //     const matchTime = todoText.match(timeRegex);
+//     const matchTimeOnly = todoText.match(timeOnlyRegex);
+  
 //     let dueDate = null;
-//     if (matchTomorrow) {
+  
+//     if (matchToday) {
+//       dueDate = new Date();
+//       dueDate.setHours(23, 59, 59);
+//     } else if (matchTomorrow) {
 //       const today = new Date();
-//       dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+//       dueDate = new Date();
+//       dueDate.setDate(today.getDate() + 1);
+//       dueDate.setHours(23, 59, 59);
 //     } else if (matchDate) {
-//       dueDate = new Date(matchDate[0]);
+//       dueDate = parseCustomDate(matchDate[0]);
+//     } else {
+//       dueDate = new Date(); // Set the due date to the current date if no date is specified.
 //     }
   
-//     if (matchTime) {
-//       const time = matchTime[0];
-//       const [hours, minutes] = time.split(':');
-//       dueDate.setHours(hours % 12 + (matchTime[2].toLowerCase() === 'pm' ? 12 : 0), minutes);
+//     if (matchTimeOnly && dueDate) {
+//       const time = matchTimeOnly[1];
+//       const [hours, meridiem] = time.split(/\s+/);
+//       const parsedHours = parseInt(hours, 10) % 12 + (meridiem.toLowerCase() === 'pm' ? 12 : 0);
+//       dueDate.setHours(parsedHours, 0);
 //     }
+  
+//     if (matchTime && dueDate) {
+//       const time = matchTime[0];
+//       const [hours, minutes, meridiem] = time.split(/:|\s+/);
+//       const parsedHours = parseInt(hours, 10) % 12 + (meridiem.toLowerCase() === 'pm' ? 12 : 0);
+//       dueDate.setHours(parsedHours, parseInt(minutes, 10));
+//     }
+  
 //     if (dueDate) {
-//       const modifiedTodoText = todoText.replace(tomorrowRegex, '').replace(dateRegex, '').replace(timeRegex, '').trim();
+//       const modifiedTodoText = todoText
+//         .replace(todayRegex, '')
+//         .replace(tomorrowRegex, '')
+//         .replace(dateRegex, '')
+//         .replace(timeRegex, '')
+//         .replace(timeOnlyRegex, '')
+//         .trim();
+  
 //       return { dueDate, modifiedTodoText };
 //     }
   
 //     return { dueDate: null, modifiedTodoText: todoText };
 //   }
+  
+//   function parseCustomDate(dateString) {
+//     const monthNames = {
+//       jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+//       jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+//     };
+  
+//     const parts = dateString.split(/\s+/);
+//     const day = parseInt(parts[0].replace(/\D/g, ''), 10);
+//     const month = monthNames[parts[1].toLowerCase()];
+//     const year = parseInt(parts[2], 10);
+  
+//     // Ensure that we have a valid date before creating the Date object
+//     if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+//       return new Date(year, month, day);
+//     }
+  
+//     return null;
+//   }
+  
+  
+function extractTaskAndDate(inputText) {
+    const dueDate = extractDeadlineFromDateText(inputText);
+    let task = inputText.trim();
+    const byIndex = inputText.toLowerCase().indexOf("by");
+
+    if (byIndex !== -1) {
+        task = inputText.slice(0,byIndex).trim();
+    }
+
+    if (dueDate) {
+        // console.log(task);
+        // console.log(dueDate);
+        return { modifiedTodoText:task, dueDate:dueDate };
+    }
+    else
+    {
+        return null;
+    }
+}
+
+function extractDeadlineFromDateText(inputText) {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const crntDayKeywords = ["today", "eod", "end of day", "this day"];
+    const tomorrowKeywords = ["tomorrow", "tmrw", "next day", "nextday"];
+    const dateRegex = /(\d{1,2})(st|nd|rd|th)?(\s)?(jan(uary)?|feb(ruary)?|mar(ch)?|apr(il)?|may|jun(e)?|jul(y)?|aug(ust)?|sep(t(ember)?)?|oct(ober)?|nov(ember)?|dec(ember)?)(\s)?(\d{4})?/i;
+    const timeRegex = /(\d{1,2})(:(\d{2}))?(\s)?(am|pm)/i;
+
+    let date = null;
+    let matches;
+
+    if (crntDayKeywords.some((keyword) => inputText.toLowerCase().includes(keyword))) {
+        date = today;
+        date.setHours(23,59,59);
+        // console.log(date+" date");
+    }
+
+    // Check if input text contains any of the tomorrow keywords
+    if (tomorrowKeywords.some((keyword) => inputText.toLowerCase().includes(keyword))) {
+        date = tomorrow;
+        date.setHours(23,59,59);
+    }
+
+    // Check if input text contains date information using regex
+    if ((matches = inputText.match(dateRegex))) {
+        const day = parseInt(matches[1], 10);
+        const month = getMonthNumberFromMonthName(matches[4]);
+        const year = matches[13] ? parseInt(matches[13], 10) : today.getFullYear();
+        date = new Date(year, month, day);
+    }
+
+    // Check if input text contains time information using regex
+    if ((matches = inputText.match(timeRegex))) {
+        let hours = parseInt(matches[1], 10);
+        const minutes = matches[3] ? parseInt(matches[3], 10) : 0;
+
+        if (matches[5].toLowerCase() === "pm" && hours < 12) {
+            hours += 12;
+        } else if (matches[5].toLowerCase() === "am" && hours === 12) {
+            hours = 0;
+        }
+
+        if (date) {
+            date.setHours(hours, minutes);
+        } else {
+            date = new Date();
+            date.setHours(hours, minutes);
+        }
+    }
+
+    if (date) {
+        date.setMinutes(date.getMinutes() + 330);
+    }
+    
+    // console.log(date+" date");
+    return date ? date.toISOString().slice(0, 16) : "";
+}
+
+function getMonthNumberFromMonthName(monthName) {
+    const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    return monthNames.indexOf(monthName.toLowerCase().slice(0, 3));
+}
+  
+    
+  
+  
+    
+  
+  
 
 function saveItem(){
     var prntDiv = event.target.parentNode;
@@ -234,26 +421,28 @@ function saveItem(){
         cancelItem();
         return;
     }
-    // console.log(data);
     var datetime = new Date();
     activity.push({name:`New Task Added ${data[0].value}`,timeStamp:datetime});
 
-    // var txt = data[0].value;
-    // var dt = data[2].value;
-    // console.log(dt)
-    // const {x,y} = extractDueDateFromText(txt);
-    // console.log(x);
-    // console.log(y);
-    // if(y)
-    // {
-    //     data[0].value = x;
-    //     data[2].value = y;
-    // }
 
-    var task = createTask(data[0].value,data[1].value,data[2].value,false,data[3].value,tags);
-    todolist.push(task);
+    const newData = extractTaskAndDate(data[0].value);
+    let finalDate = data[2].value;
+
+    if(newData && newData.dueDate)
+    {
+        data[0].value = newData.modifiedTodoText;
+        finalDate = new Date(newData.dueDate).toLocaleString();
+        // console.log(finalDate);
+    }
+
+
+    var task = createTask(data[0].value,data[1].value,finalDate,false,data[3].value,tags,data[5].value);
+    todolist.push(task);//console.log(todolist);
     insertTaskInCategories(task.category,task.id);
     insertTaskInPriorities(task.priority,task.id);
+    LocalStorageHelper.setData('todolist', todolist);
+    LocalStorageHelper.setData('categories', categories);
+    LocalStorageHelper.setData('priorities', priorities);
     prntDiv.innerHTML = "";
     var addBtn = document.createElement("button");
     addBtn.id = "addTask";
@@ -280,7 +469,7 @@ function cancelItem(){
 function deleteItem()
 {
     let buttonId = event.target.id;
-    console.log(buttonId);
+    // console.log(buttonId);
     var idx = -1;
     for (let i = 0; i < todolist.length; i++) {
         if(Number(buttonId) === todolist[i].id)
@@ -289,14 +478,15 @@ function deleteItem()
             break;
         }
     }
-    console.log(idx);
+    // console.log(idx);
     if (idx != -1) 
     {
         var datetime = new Date();
         activity.push({name:`Task Deleted : ${todolist[idx].taskDetails}`,timeStamp:datetime});
         todolist.splice(idx, 1);
     }
-    console.log(todolist);
+    // console.log(todolist);
+    LocalStorageHelper.setData('todolist', todolist);
     typeOfRender = 0;
     renderList();
 }
@@ -351,6 +541,7 @@ function viewItem()
     var xy = document.createElement("div");
     xy.appendChild(document.createTextNode("SubTasks :"));
     var subList = document.createElement("ul");
+    subList.setAttribute('class',`subTasksList+${id}`);
     todolist[idx].subTasks.forEach(elmnt => {
         renderSubTask(subList,elmnt);
     });
@@ -419,19 +610,22 @@ function saveEditItem(){
     var ind = categories.findIndex(x => x.category===cat);
     categories[ind].tasks = categories[ind].tasks.filter(x => Number(x)!==Number(buttonId));
     insertTaskInCategories(data[1].value,Number(buttonId));
-    console.log(categories);
+    // console.log(categories);
 
     var p = todolist[idx].priority;
     ind = priorities.findIndex(x => x.priority===p);
     priorities[ind].tasks = priorities[ind].tasks.filter(x => Number(x)!==Number(buttonId));
     insertTaskInPriorities(data[3].value,Number(buttonId));
-    console.log(priorities);
+    // console.log(priorities);
 
     todolist[idx].taskDetails = data[0].value;
     todolist[idx].category = data[1].value;
     todolist[idx].dueDate = data[2].value;
     todolist[idx].priority = data[3].value;
     todolist[idx].tags = tags;
+    LocalStorageHelper.setData('todolist', todolist);
+LocalStorageHelper.setData('categories', categories);
+LocalStorageHelper.setData('priorities', priorities);
     // insertTaskInPriorities(task.priority,task.id);
     renderList();
 }
@@ -439,7 +633,7 @@ function saveEditItem(){
 function editItem(button){
     let buttonId = button.id;
     let prnt = button.parentNode;
-    console.log(buttonId);  
+    // console.log(buttonId);  
     var idx = -1;
     for (let i = 0; i < todolist.length; i++) {
         if(Number(buttonId) === todolist[i].id)
@@ -530,8 +724,11 @@ function insertSubTask(){
         return;
     }
     todolist[idx].subTasks.push(subTask);
+    LocalStorageHelper.setData('todolist', todolist);
+    LocalStorageHelper.setData('categories', categories);
+    LocalStorageHelper.setData('priorities', priorities);
     alert("Sub Task added successfully, You can now add more subtasks, stop by clicking done button");
-    console.log(todolist);
+    // console.log(todolist);
     var datetime = new Date();
     activity.push({name:`SubTask ${data[0].value}  Added to: ${todolist[idx].taskDetails}`,timeStamp:datetime});
 }
@@ -853,8 +1050,8 @@ function categoryFilter(){
 
 function filterByPriority(){
     var p = event.target.parentNode.children[0].value;
-    console.log(p);
-    console.log(priorities);
+    // console.log(p);
+    // console.log(priorities);
     var idx = priorities.findIndex((elmnt) => elmnt.priority.toLowerCase()===p.toLowerCase());
     let list = document.getElementById("finalList");
     if(list)list.innerHTML = '';
@@ -896,19 +1093,55 @@ function priorityFilter(){
     prntDiv.replaceChild(innerDiv,crntChild);
 }
 
-function sortList(dsc){
-    if(dsc)
-    {
-        todolist.sort((a,b) => (a.dueDate < b.dueDate) ? 1:-1);
+function parseDateFromString(dateString) {
+    const [datePart, timePart] = dateString.split(', ');
+    const [month, day, year] = datePart.split('/').map(Number);
+    const [time, meridiem] = timePart.split(' ');
+    let [hours, minutes, seconds] = time.split(':').map(Number);
+  
+    if (meridiem === 'PM') {
+      hours += 12;
+    }
+  
+    return new Date(year, month - 1, day, hours, minutes, seconds);
+  }
+  
+  function sortList(dsc) {
+
+    if(!dsc){
+        todolist.sort((taskA, taskB) => {
+            const dueDateA = parseDateFromString(taskA.dueDate);
+            const dueDateB = parseDateFromString(taskB.dueDate);
+        
+            if (dueDateA < dueDateB) {
+              return -1;
+            } else if (dueDateA > dueDateB) {
+              return 1;
+            }
+        
+            return 0;
+          });
     }
     else
     {
-        todolist.sort((a,b) => (a.dueDate > b.dueDate) ? 1:-1);
+        todolist.sort((taskA, taskB) => {
+            const dueDateA = parseDateFromString(taskA.dueDate);
+            const dueDateB = parseDateFromString(taskB.dueDate);
+        
+            if (dueDateA < dueDateB) {
+              return 1;
+            } else if (dueDateA > dueDateB) {
+              return -1;
+            }
+        
+            return 0;
+          });
     }
     renderList();
     var datetime = new Date();
-    activity.push({name:"duedate sorting applied",timeStamp:datetime});
-}
+    activity.push({name:"due date sorting applied",timeStamp:datetime});
+  }
+  
 
 function sortList1(dsc){
     const arr = {
@@ -916,7 +1149,7 @@ function sortList1(dsc){
         "med": 1,
         "high": 2
     }
-    console.log(arr[todolist[0].priority]);
+    // console.log(arr[todolist[0].priority]);
     if(dsc)
     {
         todolist.sort((a,b) => (arr[a.priority] < arr[b.priority]) ? 1:-1);
@@ -1310,6 +1543,7 @@ function checkReminders()
 {
     var rem = "";
     for (let i = 0; i < todolist.length; i++) {
+        if(todolist[i].isRem==="false")continue;
         const currentDate = new Date();
         const currentHour = currentDate.getHours();
         const newHour = currentHour + 1;
@@ -1317,13 +1551,101 @@ function checkReminders()
         var x = new Date(todolist[i].dueDate);
         if(currentDate.getTime()>=x.getTime())
         {
-            rem = rem+String(todolist[i].taskDetails)+", ";
+            rem = rem+String(todolist[i].taskDetails)+",           ";
         }
     }
     // console.log(rem);
     if(rem.length>0)
-    {alert(`Reminder !!! Following tasks have due date in 1 hour : ${rem}`)}
+    {alert(`Reminder !!! Following tasks are due in 1 hour : ${rem}`)}
 }
 
 
 setInterval(checkReminders, 60000); 
+
+
+function makeDraggable(element) {
+    element.draggable = true;
+
+    element.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", e.target.id);
+        e.target.classList.add("dragging");
+    });
+
+    element.addEventListener("dragend", (e) => {
+        e.target.classList.remove("dragging");
+    });
+}
+
+
+function swapTasks(sourceIndex, targetIndex) {
+    const tasksContainer = document.getElementById("finalList");
+    const tasks = tasksContainer.childNodes;
+
+    const sourceTask = tasks[sourceIndex];
+    const targetTask = tasks[targetIndex];
+
+    tasksContainer.insertBefore(sourceTask, targetTask);
+
+    const taskId = parseInt(sourceTask.dataset.taskId, 10);
+    const targetTaskId = parseInt(targetTask.dataset.taskId, 10);
+
+    const tempTask = todolist[sourceIndex];
+    todolist[sourceIndex] = todolist[targetIndex];
+    todolist[targetIndex] = tempTask;
+
+    todolist[sourceIndex].action = "moved";
+    todolist[targetIndex].action = "moved";
+
+    localStorage.setItem("todolist", JSON.stringify(todolist));
+}
+
+function findIndexFromTaskElement(element) {
+    const tasksContainer = document.getElementById("finalList");
+    const tasks = tasksContainer.childNodes;
+    return Array.from(tasks).indexOf(element);
+}
+
+// function swapSubtasks(taskId, sourceIndex, targetIndex) {
+//     const subtasksList = document.querySelector(`subTasksList+${taskId}`);
+//     const subtasks = subtasksList.childNodes;
+
+//     const sourceSubtask = subtasks[sourceIndex];
+//     const targetSubtask = subtasks[targetIndex];
+
+
+//     subtasksList.insertBefore(sourceSubtask, targetSubtask);
+
+//     const sourceTask = todolist.find((task) => task.id === taskId);
+//     const tempSubtask = sourceTask.subtasks[sourceIndex];
+//     sourceTask.subtasks[sourceIndex] = sourceTask.subtasks[targetIndex];
+//     sourceTask.subtasks[targetIndex] = tempSubtask;
+
+//     sourceTask.subtasks[sourceIndex].action = "moved";
+//     sourceTask.subtasks[targetIndex].action = "moved";
+
+//     localStorage.setItem("todolist", JSON.stringify(todolist));
+// }
+
+// function findIndexFromSubtaskElement(element) {
+//     const subtasksList = element.parentElement;
+//     const taskElement = subtasksList.parentElement;
+//     const tasksContainer = document.getElementById("task-box");
+//     const tasks = tasksContainer.querySelectorAll(".task");
+//     return Array.from(tasks).indexOf(taskElement);
+// }
+
+function handleDragOver(e) {
+    e.preventDefault();
+    const draggedTask = document.querySelector(".dragging");
+    const overTask = e.target.closest("li");
+
+    if (overTask && draggedTask && draggedTask !== overTask) {
+        const fromIndex = findIndexFromTaskElement(draggedTask);
+        const toIndex = findIndexFromTaskElement(overTask);
+
+        swapTasks(fromIndex, toIndex);
+    }
+}
+
+
+document.addEventListener("dragover", handleDragOver);
