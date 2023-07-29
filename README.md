@@ -43,4 +43,4 @@ Reminders (Cron): Users can set reminders for important tasks.
 
 Date Auto Complete: Users will get auto-complete while creating a new todo for due-date put in as text, so if the user puts in "complete x by tomorrow" - tomorrow's date should be taken as the due date automatically and the todo text should be "complete x" only. Similarly, if the todo text is, "complete x by 13th Jan 2023 3 pm" then the date and time should automatically be captured from the textbox to create the due date.
 
-Drag and Drop: Users can reorder tasks using drag and drop . Dragging available from bottom to top
+Drag and Drop: Users can reorder tasks using drag and drop .
